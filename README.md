@@ -1,5 +1,7 @@
 # vue-auth
 
+[Live Demo](https://vue-authentication.herokuapp.com)
+
 ## Project setup
 ```
 yarn install
