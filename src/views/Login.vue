@@ -7,6 +7,9 @@
             <v-toolbar-title>Login</v-toolbar-title>
           </v-toolbar>
           <v-card-text>
+            <v-alert v-if="message" value="true" type="error">
+              {{ message }}
+            </v-alert>
             <v-form>
               <v-text-field
                 v-model="email"
@@ -36,15 +39,21 @@
 </template>
 
 <script>
-import axios from "axios";
-import router from "../router.js";
-
 export default {
   name: "Login",
   data: () => ({
     email: "user@email.com",
     password: "password"
   }),
+  computed: {
+    message() {
+      let message = null;
+      if (this.$route.query.m === 401) {
+        message = "You're not authenticated!";
+      }
+      return message;
+    }
+  },
   methods: {
     login() {
       let login = () => {
@@ -54,11 +63,11 @@ export default {
         };
         console.log(data);
 
-        axios
+        this.$http
           .post("/api/login", data)
           .then(() => {
             console.log("Logged in");
-            router.push("/dashboard");
+            this.$router.push("/dashboard");
           })
           .catch(err => {
             console.log("Cannot log in", err);

@@ -1,30 +1,45 @@
 const express = require("express");
-
-// Creating an express instance
-const app = express();
 const history = require("connect-history-api-fallback");
-const cookieSession = require("cookie-session");
+const session = require("express-session");
 const bodyParser = require("body-parser");
 const passport = require("passport");
 
 // Getting the local authentication type
 const LocalStrategy = require("passport-local").Strategy;
 
-const PORT = process.env.PORT || 3000;
+const TWO_HOURS = 1000 * 60 * 60 * 2;
+
+const {
+  PORT = 3000,
+  NODE_ENV = "development",
+  SESS_NAME = "SID",
+  SESS_LIFETIME = TWO_HOURS,
+  SESS_SECRET = "this is a secret!"
+} = process.env;
+
+const IN_PROD = NODE_ENV === "production";
+
+// Creating an express instance
+const app = express();
 
 app.use(history());
-
 app.use(bodyParser.json());
 
 app.use(
-  cookieSession({
-    name: "mysession",
-    keys: ["vueauthrandomkey"],
-    maxAge: 24 * 60 * 60 * 1000 // 24
+  session({
+    name: SESS_NAME,
+    resave: false,
+    saveUninitialized: false,
+    secret: SESS_SECRET,
+    cookie: {
+      maxAge: SESS_LIFETIME,
+      sameSite: true,
+      secure: IN_PROD
+    }
   })
 );
 
-app.use(express.static("../dist"));
+app.use(express.static("./dist"));
 
 app.use(passport.initialize());
 
@@ -43,13 +58,15 @@ let users = [
     id: 1,
     name: "Jude",
     email: "user@email.com",
-    password: "password"
+    password: "password",
+    is_admin: 1
   },
   {
     id: 2,
     name: "Emma",
     email: "emma@email.com",
-    password: "password2"
+    password: "password2",
+    is_admin: 0
   }
 ];
 
@@ -71,10 +88,16 @@ app.post("/api/login", (req, res, next) => {
 
 app.get("/api/logout", (req, res) => {
   req.logout();
-
   console.log("Logged out");
 
   return res.send();
+});
+
+app.post("/api/auth", authMiddleware, (req, res) => {
+  let user = users.find(user => {
+    return user.id === req.session.passport.user;
+  });
+  res.send({ user });
 });
 
 app.get("/api/user", authMiddleware, (req, res) => {

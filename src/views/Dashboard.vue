@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isAuth">
+  <div>
     <v-navigation-drawer
       v-model="drawer"
       :clipped="$vuetify.breakpoint.lgAndUp"
@@ -114,13 +114,9 @@
 </template>
 
 <script>
-import axios from "axios";
-import router from "../router.js";
-
 export default {
   name: "Login",
   data: () => ({
-    isAuth: false,
     user: {
       name: "Jesse"
     },
@@ -164,21 +160,20 @@ export default {
       return;
     },
     getUserData() {
-      axios
+      this.$http
         .get("/api/user")
         .then(response => {
           console.log(response);
           this.$set(this, "user", response.data.user);
-          this.isAuth = true;
         })
         .catch(() => {
           // console.log(errors);
-          router.push("/");
+          this.$router.push("/login");
         });
     },
     logout() {
-      axios.get("/api/logout").then(() => {
-        router.push("/");
+      this.$http.get("/api/logout").then(() => {
+        this.$router.push("/login");
       });
     }
   }
